@@ -2,13 +2,29 @@
   "name": "@spire/cloud",
   "version": "0.1.0",
   "private": true,
-  "description": "Cloud bridge service (Next.js on Vercel + Supabase). Scaffolded in task 4.1.",
-  "engines": {
-    "node": "26.x"
-  },
+  "description": "Cloud bridge service: ingest from the collector, map NetBox sources to Rhombus cameras, publish seekpoints, admin UI, health, displays.",
+  "engines": { "node": "26.x" },
   "scripts": {
-    "build": "echo 'cloud: scaffolded in task 4.1'",
-    "typecheck": "echo skip",
-    "test": "echo 'cloud: no tests yet'"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@spire/shared": "workspace:*",
+    "@supabase/ssr": "0.12.7",
+    "@supabase/supabase-js": "2.118.0",
+    "next": "16.4.4",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "typescript": "5.9.3",
+    "vitest": "5.1.0"
   }
 }
