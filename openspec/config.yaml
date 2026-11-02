@@ -1,0 +1,37 @@
+schema: spec-driven
+
+context: |
+  This project is the bridge between the Spire Condominium's on-prem LenelS2 NetBox
+  access control system and its Rhombus cloud video platform. See docs/ for the
+  building context, the NetBox API (NBAPI) summary, and the Rhombus API summary.
+
+  Hard constraints:
+  - NetBox is an on-prem appliance on the building LAN. It must never be exposed to
+    the internet. Only the on-prem collector talks to NetBox.
+  - NetBox remains the system of record for people, credentials, doors and floor
+    rights. This project only READS from NetBox. It must never write person,
+    credential, access-level or portal data to NetBox.
+  - Rhombus API keys and NetBox credentials never reach a browser. Browsers get
+    short-lived federated session tokens minted by the cloud service.
+  - Two deployables: `collector` (Docker container on the LAN, Node/TypeScript) and
+    `cloud` (Vercel-hosted TypeScript web service with Supabase Postgres).
+  - All inter-component traffic is HTTPS, authenticated, and outbound-only from the
+    building network. No inbound ports on the LAN.
+  - NetBox speaks NBAPI version 2 only after the planned NetBox update to 6.2+.
+    Until then the collector must work against NBAPI v1 (same XML command set in the
+    April 2024 guide); keep the NBAPI client isolated so the version switch is one
+    configuration change.
+  - The property manager, not an engineer, is the day-to-day operator. Admin UI
+    must be usable without reading code or config files.
+  - Security posture: least-privilege NetBox API user (read-only role), secrets in
+    Vercel/Supabase env and Docker secrets only, audit log of admin changes.
+
+rules:
+  proposal:
+    - State what is out of scope for v1 explicitly
+  specs:
+    - Name NetBox event types by their NBAPI DESCNAME values (e.g. "Access Granted")
+    - Name Rhombus API endpoints by path (e.g. /api/camera/createCustomFootageSeekpoints)
+  tasks:
+    - Every task group that ships code includes its own tests and docs
+    - Mark tasks that need a vendor action (Sequoyah, Rhombus) with "[vendor]"
