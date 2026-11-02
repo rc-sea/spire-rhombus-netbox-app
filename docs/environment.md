@@ -4,8 +4,8 @@
 | --- | --- | --- | --- |
 | GitHub repo | https://github.com/rc-sea/spire-rhombus-netbox-app | RC | created |
 | Vercel team / project | _fill in_ | RC | created (2026-11-02) |
-| Supabase team / project ref | _fill in_ (new Spire team; not visible to the Zooey-scoped connector) | RC | created (2026-11-02) |
-| Supabase region | _fill in_ (prefer us-west for Seattle) | RC | |
+| Supabase project | "Spire Netbox Rhombus integration", ref `xrrroiletweovpfjowbq`, Postgres 17 | RC | created (2026-11-02) |
+| Supabase region | us-east-2 | RC | |
 | NetBox IP / hostname | _fill in_ | Sequoyah | pending |
 | NetBox HTTP or HTTPS; certificate | _fill in_ | Sequoyah | pending |
 | NetBox version / NBAPI version | _fill in_ (`GetAPIVersion`) | Sequoyah | pending |
