@@ -7,7 +7,7 @@ See proposal.md for motivation. The facts that shape the design:
 - **NetBox** is an on-prem appliance (Ubuntu, single Ethernet port) on the building LAN. Its API (NBAPI) is XML over HTTP POST: commands at `/goforms/nbapi`, event list/trigger at `/appd/nbapi`, and a long-lived event stream at `/appdevent/nbapi/event`. Authentication is `Login` → session ID (a hash since 5.4) carried on each request; an alternative SHA-1 MAC scheme exists but needs a shared 8-character secret and a monotonic sequence number, which is fragile across restarts, so we use user-login auth. The stream delivers only events after subscription, sends a keep-alive every 10 s, and allows **one** stream client. `GetAccessHistory` supports `AFTERLOGID` for forward catch-up. Spire is on NBAPI v1 until Sequoyah applies the NetBox 6.2+ update (which removes v1 and enables v2); the April 2024 guide (API-UG-22) documents the command set we rely on.
 - **Rhombus** is a cloud API at `https://api2.rhombussystems.com`, JSON over POST, authenticated with `x-auth-scheme: api-token` + `x-auth-apikey`. The ingest primitive is `/api/camera/createCustomFootageSeekpoints` (array of `{name ≤32, timestampMs, color, description ≤100, displayOverlay}` per camera). Browser video uses federated session tokens from `/api/org/generateFederatedSessionToken` and media URIs from `/api/camera/getMediaUris`; Rhombus publishes `@rhombussystems/react` (React 18+, DASH/WebSocket players), a Go CLI, a Python examples repo, and a TypeScript MCP server whose source is a useful reference for request shapes. There is no official Node SDK for the REST API.
 - **Operators** are the property manager and board members. Sequoyah (LenelS2 integrator) owns NetBox configuration; the Rhombus dealer owns Rhombus licensing.
-- **House stack** is Nuxt / Supabase / Vercel (TypeScript).
+- **House stack** is Nuxt / Supabase / Vercel (TypeScript); this project deliberately uses Next.js (React) instead — see Decision 3.
 
 ## Goals / Non-Goals
 
@@ -37,11 +37,11 @@ See proposal.md for motivation. The facts that shape the design:
 **Why:** Same language as the cloud side so the shared event schema (`packages/shared`, zod) is literally shared; SQLite gives durable at-least-once without another service; Node handles one long-lived stream and periodic polling trivially.
 **Alternatives:** Go (great for a daemon, but splits the codebase); Python (Rhombus examples exist, but no shared types). The NBAPI client is its own module with a **command allow-list** so the read-only guarantee is enforced in code, not by convention.
 
-### 3. Cloud framework: Nuxt (house stack) with a React island for the Rhombus player
+### 3. Cloud framework: Next.js (React) for the whole cloud app
 
-**Choice:** Nuxt 3 on Vercel for the admin UI, API routes (Nitro) and display pages. For the live-video tiles, use the official `@rhombussystems/react` player mounted as an isolated React island inside the display page (Nuxt supports mounting a React root in a client-only component; alternatively `RhombusBufferedPlayer`'s approach — DASH via `dash.js` on a native `<video>` — can be reimplemented in Vue if the island proves awkward).
-**Why:** RC's team knows Nuxt/Supabase/Vercel; the only React-specific need is the player, which is a leaf component. Keeping one framework for admin, API and displays keeps the project small.
-**Alternatives:** Next.js (React) for everything — cleanest SDK fit, but a second framework for the team; Vue + `dash.js` with the `player-example` recipe (federated token → `getMediaUris` → DASH) — fully in-house, loses the SDK's reconnect/timeline polish. **Decision point for RC:** start with Nuxt + React island; fall back to Vue + `dash.js` if the island costs more than a day.
+**Choice:** Next.js (App Router) on Vercel for the admin UI, the API (Route Handlers), Vercel Cron jobs and the display pages. Display tiles use the official `@rhombussystems/react` `RhombusPlayer` directly (client components; the SDK is client-only), with `apiOverrideBaseUrl` pointed at our own token/media proxy routes. Supabase for Auth and Postgres as planned. Decided with RC on 2026-11-02.
+**Why:** The one risky UI component is the unattended live-video tile; the Rhombus-maintained React SDK already handles reconnect, token refresh via a backend-minted federated token, live/playback switching and offline states, and tracks Rhombus's streaming changes. Everything else is CRUD and API routes, where Next.js and Nuxt are equivalent on Vercel. One framework keeps the bundle, debugging and mental model simple.
+**Alternatives:** Nuxt 3 (house stack) with a React island for the player — keeps team familiarity but ships two frameworks and two reactivity systems in one page for a leaf component; Nuxt + Vue + `dash.js` per Rhombus's `player-example` (federated token → `getMediaUris` → DASH) — fully in-house, but we would own reconnect and token-refresh edge cases on a page nobody watches. Rejected in favour of the maintained SDK.
 
 ### 4. Transport collector → cloud
 
@@ -98,7 +98,8 @@ Pino JSON logs in both deployables; Vercel log drain optional. Health states com
 - [Clock skew between NetBox, collector and Rhombus] → Use NetBox-provided tzoffset timestamps; monitor skew between NetBox `CDT` and collector receive time and surface it on the health page.
 - [Vercel function limits during a large catch-up (thousands of events)] → Cron drains in bounded pages (≤500 jobs per run); the collector throttles history delivery to 100 events per batch, 1 batch/second.
 - [Rhombus seekpoint limits or rate limits are undocumented] → Batch per camera, honour 429 with backoff, and ask the Rhombus dealer for limits; make the per-kind publish toggle available so noisy kinds (e.g. "Event normal") can be excluded.
-- [React island in Nuxt proves awkward] → Fallback to Vue + `dash.js` per Rhombus's `player-example` (federated token → `getMediaUris` → DASH), already documented in docs/rhombus-api.md.
+- [`@rhombussystems/react` has a gap for kiosk use (e.g. no hook for a per-tile offline placeholder or a breaking release)] → Pin the SDK version; wrap `RhombusPlayer` in our own tile component that owns the placeholder, check-in and reload logic; fallback is `dash.js` per Rhombus's `player-example` (federated token → `getMediaUris` → DASH), documented in docs/rhombus-api.md.
+- [Team is Nuxt-first] → Next.js is close enough for an app this size; keep the admin UI to a small set of pages, and lean on Supabase for auth and data access patterns the team already knows.
 - [Display PCs are old Magic Monitor machines] → Verify Chrome/Edge version and H.264/WebCodecs support in task 1; fallback static panel is specified.
 - [Rhombus ships native NetBox integration mid-project] → Collector/publisher become redundant; displays, admin and health keep value. Keep the publisher behind a feature flag so it can be turned off without redeploying.
 

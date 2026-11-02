@@ -26,7 +26,7 @@ Deprecated operations exist (83 hidden behind a toggle in the reference). Check 
 ## SDKs and reference code
 
 - `@rhombussystems/react` (npm, v2.x, React 18+): `RhombusPlayer` (live + playback, DASH/WebSocket), `RhombusBufferedPlayer` (MPEG-DASH on a native `<video>`), `RhombusRealtimePlayer` (low-latency H.264 over WebSocket to canvas; needs WebCodecs — Chrome/Edge/Safari 16.4+). Expects your backend to mint federated tokens (`POST /api/federated-token` by convention) and takes `apiOverrideBaseUrl` for a proxy. Client-only in SSR frameworks.
-- `player-example` (GitHub): framework-free DashJS recipe — proxy mints federated token → `getMediaUris` → DashJS plays. The fallback if the React island in Nuxt is awkward.
+- `player-example` (GitHub): framework-free DashJS recipe — proxy mints federated token → `getMediaUris` → DashJS plays. The fallback if the React SDK ever has a gap for kiosk use.
 - `rhombus-cli` (Go) and `rhombus-node-mcp` (TypeScript MCP server): useful as reference for request shapes; the MCP source already contains a read-only "netbox events" tool, a hint that Rhombus is building NetBox support.
 - `api-examples-python` (GitHub): Python examples.
 - There is no official Node REST SDK; we write a thin typed client.

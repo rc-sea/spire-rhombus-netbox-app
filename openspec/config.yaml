@@ -14,7 +14,8 @@ context: |
   - Rhombus API keys and NetBox credentials never reach a browser. Browsers get
     short-lived federated session tokens minted by the cloud service.
   - Two deployables: `collector` (Docker container on the LAN, Node/TypeScript) and
-    `cloud` (Vercel-hosted TypeScript web service with Supabase Postgres).
+    `cloud` (Next.js App Router on Vercel, TypeScript, Supabase Auth + Postgres).
+    Display tiles use the official @rhombussystems/react SDK, version pinned.
   - All inter-component traffic is HTTPS, authenticated, and outbound-only from the
     building network. No inbound ports on the LAN.
   - NetBox speaks NBAPI version 2 only after the planned NetBox update to 6.2+.

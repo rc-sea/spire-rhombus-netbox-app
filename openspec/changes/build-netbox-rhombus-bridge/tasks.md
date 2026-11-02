@@ -30,7 +30,7 @@
 
 ## 4. Cloud service: ingest and publishing
 
-- [ ] 4.1 Create the Nuxt 3 project on Vercel with Supabase (Auth + Postgres), migrations for the tables in design.md Decision 6, and RLS policies; verify migrations apply cleanly to a fresh project and RLS blocks anonymous reads
+- [ ] 4.1 Create the Next.js (App Router) project on Vercel with Supabase (Auth + Postgres), migrations for the tables in design.md Decision 6, and RLS policies; verify migrations apply cleanly to a fresh project and RLS blocks anonymous reads
 - [ ] 4.2 Implement `/api/ingest/events` (bearer auth against hashed collector secret, zod validation, idempotent insert, per-event errors) and verify tests cover new, duplicate, invalid-auth and partially invalid batches
 - [ ] 4.3 Implement `/api/ingest/heartbeat` and `/api/ingest/inventory` and verify tests store heartbeats and upsert inventory by (type, netbox_key)
 - [ ] 4.4 Implement the Rhombus client (`createCustomFootageSeekpoints`, `getMinimalCameraStateList`, `generateFederatedSessionToken`, `getMediaUris`) with error-code handling and 429 backoff; verify tests use recorded responses and assert the API key never appears in logs
@@ -61,7 +61,7 @@
 - [ ] 7.1 Verify the parking lobby PCs' browser (Chrome/Edge version, H.264/WebCodecs support, kiosk mode) and record findings in `docs/environment.md`; verify the Rhombus `player-example` plays one Spire camera on that hardware
 - [ ] 7.2 Implement display configuration (layouts, tiles, text panel, rotation, device token issue/revoke) in the admin UI with audit; verify tests show a token for display A cannot fetch display B
 - [ ] 7.3 Implement server-side federated token minting scoped to a display's cameras with refresh endpoint; verify tests assert the API key is absent from responses and the page bundle
-- [ ] 7.4 Implement the display page (Nuxt route, React island with `@rhombussystems/react` `RhombusPlayer` per tile — or Vue + `dash.js` fallback per design Decision 3), config polling (60 s), offline placeholders, auto-reconnect, daily reload; verify a manual test survives a 2-minute network cut and a camera being disabled
+- [ ] 7.4 Implement the display page (Next.js client route, a tile component wrapping `@rhombussystems/react` `RhombusPlayer` with `apiOverrideBaseUrl` pointed at our token/media proxy routes, SDK version pinned), config polling (60 s), offline placeholders, auto-reconnect, daily reload; verify a manual test survives a 2-minute network cut and a camera being disabled
 - [ ] 7.5 Implement display check-in and `display-offline` health state; verify tests raise the state after 10 minutes without check-in during scheduled hours
 - [ ] 7.6 Deploy to the first parking lobby PC in kiosk mode and verify it runs unattended for 72 hours; document the PC setup in `docs/display-setup.md`
 
