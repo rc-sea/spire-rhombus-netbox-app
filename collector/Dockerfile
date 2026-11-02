@@ -3,7 +3,7 @@
 
 FROM node:26-slim AS build
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@10.28.0 --activate
+RUN npm install -g pnpm@10.28.0
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 COPY packages/shared/package.json packages/shared/tsconfig.json packages/shared/
 COPY collector/package.json collector/tsconfig.json collector/tsconfig.build.json collector/
@@ -16,7 +16,7 @@ RUN pnpm --filter @spire/shared build \
 FROM node:26-slim AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@10.28.0 --activate
+RUN npm install -g pnpm@10.28.0
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/shared/package.json packages/shared/
 COPY collector/package.json collector/
