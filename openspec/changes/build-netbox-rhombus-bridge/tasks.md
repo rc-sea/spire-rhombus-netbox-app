@@ -27,7 +27,7 @@
 - [x] 3.3 Implement the cloud delivery loop (batches ≤100, bearer auth, backoff, 401/403 stop-and-hold, ack-based spool removal) and verify tests against a fake ingest server covering 2xx, 5xx, timeout and 401
 - [x] 3.4 Implement the reconciliation job (after reconnect and every 5 min) using `GetAccessHistory AFTERLOGID` and verify an integration test shows a 14-event gap is delivered with `source: "history"` and duplicate ids are reused
 - [x] 3.5 Implement heartbeat (60 s) with status fields and inventory-refresh action handling; verify tests show a `refresh-inventory` action triggers inventory publication within 60 s
-- [ ] 3.6 (image and compose written; build verified by CI's collector-image job, compose run pending a Docker host) Build the Docker image (multi-arch, non-root, no secrets, `restart: unless-stopped` compose file, localhost-only health endpoint) and verify `docker compose up` on a clean host starts, logs in, and streams against the fake NetBox server
+- [ ] 3.6 (image builds on RC's Mac 2026-11-02; compose run on the LAN host still pending) Build the Docker image (multi-arch, non-root, no secrets, `restart: unless-stopped` compose file, localhost-only health endpoint) and verify `docker compose up` on a clean host starts, logs in, and streams against the fake NetBox server
 - [x] 3.7 Write `collector/DEPLOY.md` (LAN host requirements, outbound-only firewall rule, secrets via Docker secrets, upgrade and rollback) and verify a reviewer can follow it to a running container
 
 ## 4. Cloud service: ingest and publishing
