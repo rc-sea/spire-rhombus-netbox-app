@@ -1,0 +1,36 @@
+# On the LAN host:
+#   mkdir -p secrets && printf '%s' 'the-netbox-password' > secrets/netbox_password
+#   printf '%s' 'the-collector-secret' > secrets/cloud_secret
+#   chmod 600 secrets/*
+#   cp .env.example .env   # and fill in NETBOX_BASE_URL etc.
+#   docker compose up -d
+services:
+  collector:
+    image: ghcr.io/rc-sea/spire-collector:latest   # or build: { context: .., dockerfile: collector/Dockerfile }
+    container_name: spire-collector
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NETBOX_PASSWORD_FILE: /run/secrets/netbox_password
+      CLOUD_SECRET_FILE: /run/secrets/cloud_secret
+      SPOOL_PATH: /data/spool.sqlite
+      HEALTH_PORT: "9108"
+    secrets:
+      - netbox_password
+      - cloud_secret
+    volumes:
+      - collector-data:/data
+    # No "ports:" section on purpose. The health endpoint is reachable only
+    # from inside the container: docker exec spire-collector node -e "fetch('http://127.0.0.1:9108').then(r=>r.text()).then(console.log)"
+    logging:
+      driver: json-file
+      options: { max-size: "20m", max-file: "5" }
+
+secrets:
+  netbox_password:
+    file: ./secrets/netbox_password
+  cloud_secret:
+    file: ./secrets/cloud_secret
+
+volumes:
+  collector-data:

@@ -1,5 +1,9 @@
 {
   "extends": "../tsconfig.base.json",
-  "compilerOptions": { "rootDir": "src", "outDir": "dist", "types": ["node"] },
-  "include": ["src"]
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node"],
+    "paths": { "@spire/shared": ["../packages/shared/src/index.ts"] }
+  },
+  "include": ["src", "test"]
 }

@@ -7,8 +7,22 @@ The on-prem half of the bridge: a single Node 26 process that reads LenelS2 NetB
 | Piece | State |
 | --- | --- |
 | `src/nbapi/` — NBAPI client, typed commands, event stream | done, tested against a fake NetBox |
-| Normalization, SQLite spool, cloud delivery, reconciliation, heartbeat | next (tasks 3.x) |
-| Dockerfile and deploy guide | next (tasks 3.6–3.7) |
+| `src/collector.ts` and friends — normalization, `node:sqlite` spool, delivery with backoff, reconciliation, heartbeat, inventory | done, end-to-end tested against fake NetBox + fake cloud |
+| `Dockerfile`, `docker-compose.yml`, `DEPLOY.md` | written; image build verified in CI |
+
+## Running it
+
+Configuration is environment variables (see `.env.example` and `DEPLOY.md`). Locally:
+
+```bash
+NETBOX_BASE_URL=http://192.168.1.10 NETBOX_USERNAME=bridge-ro NETBOX_PASSWORD=… \
+CLOUD_BASE_URL=https://spire-bridge.vercel.app CLOUD_SECRET=… \
+SPOOL_PATH=./spool.sqlite pnpm --filter @spire/collector dev
+```
+
+On start the collector probes NetBox (path family + `GetAPIVersion`), opens the event stream, sets the access-history high-water mark, and begins heartbeating. Events go to the local spool first and are delivered to the cloud in batches with backoff; the spool survives restarts and holds up to 7 days / 100k events.
+
+Idempotency: access events (granted/denied) are keyed by reader + person + second so the same fob read seen on the stream and in `GetAccessHistory` collapses to one id; all other activity is keyed by NetBox `ACTIVITYID`.
 
 ## The NBAPI client
 

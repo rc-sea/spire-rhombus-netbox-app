@@ -123,13 +123,15 @@ export class FakeNetBox {
       if (!path.startsWith('/nbws/')) {
         this.requests.push({ path, command: undefined, body });
         res.writeHead(410, { 'content-type': 'text/plain' });
-        return res.end('Gone');
+        res.end('Gone');
+        return;
       }
       path = path.slice('/nbws'.length);
     } else if (path.startsWith('/nbws/')) {
       this.requests.push({ path, command: undefined, body });
       res.writeHead(404, { 'content-type': 'text/plain' });
-      return res.end('Not Found');
+      res.end('Not Found');
+      return;
     }
     let command: string | undefined;
     let sessionId: string | undefined;
