@@ -32,13 +32,36 @@ export const EVENT_API_COMMANDS: ReadonlySet<string> = new Set(['ListEvents', 'T
 
 export type NbapiVersion = 1 | 2;
 
+/**
+ * Where NetBox serves NBAPI. Pre-6.x firmware uses the "legacy" paths from the
+ * April 2024 guide; 6.x moved commands under /nbws and answers HTTP 410 on the
+ * old path. The event-stream path on 6.x is unverified; it is probed too.
+ */
+export type NbapiPathFamily = 'legacy' | 'nbws';
+
+export const PATH_FAMILIES: Readonly<
+  Record<NbapiPathFamily, { commands: string; events: string; stream: string }>
+> = {
+  legacy: { commands: '/goforms/nbapi', events: '/appd/nbapi', stream: '/appdevent/nbapi/event' },
+  nbws: {
+    commands: '/nbws/goforms/nbapi',
+    events: '/nbws/appd/nbapi',
+    stream: '/nbws/appdevent/nbapi/event',
+  },
+};
+
 export interface NbapiClientOptions {
   /** e.g. "http://192.168.10.5" or "https://netbox.spire.local:8443" (no trailing slash). */
   baseUrl: string;
   username: string;
   password: string;
-  /** Which NBAPI version NetBox is expected to speak. Logged and compared with GetAPIVersion. */
-  version: NbapiVersion;
+  /**
+   * Which NBAPI version NetBox is expected to speak, or 'auto' to accept whatever
+   * GetAPIVersion reports. The wire format is identical; v2 adds commands.
+   */
+  version: NbapiVersion | 'auto';
+  /** Path family, or 'auto' (default) to probe legacy first, then nbws. */
+  pathFamily?: NbapiPathFamily | 'auto';
   /** How the XML is sent: raw body (default per the guide) or a form field named APIcommand. */
   bodyMode?: 'raw' | 'form';
   /** Also send the session id as a `.sessionid` cookie (needed by event endpoints). Default true. */
@@ -49,6 +72,15 @@ export interface NbapiClientOptions {
   paths?: { commands?: string; events?: string; stream?: string };
   /** Optional undici Dispatcher (used by tests and for custom TLS/CA settings). */
   dispatcher?: import('undici').Dispatcher;
+}
+
+/** What `NbapiClient.probe()` found out about the unit. */
+export interface NbapiProbeResult {
+  pathFamily: NbapiPathFamily;
+  /** APIVERSION string from GetAPIVersion, e.g. "4.7". */
+  apiVersion: string;
+  /** Families tried and why they were rejected, for the health page. */
+  tried: { family: NbapiPathFamily; outcome: string }[];
 }
 
 /** Parsed shape of a NETBOX response document. */

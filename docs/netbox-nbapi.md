@@ -2,14 +2,18 @@
 
 Source: *Web-Based API for NetBox and NetBox Global*, LenelS2 document API-UG-22, April 2024 (current with NetBox 5.4.x / Global 2.19). The PDF is kept outside the repo (Spire board folder). Page numbers below are the guide's.
 
-## Versions
+## Versions, and running on both
 
-- NBAPI v1 deprecated in NetBox 5.6 (Nov 2022), retired in 6.0. For existing v1 users, upgrading to **6.2** disables v1 and enables v2. The command set documented in API-UG-22 is what we target; keep the client behind one interface so the switch is `NBAPI_VERSION=2`.
-- `GetAPIVersion` (p. 95) returns the API software version; log it on every collector start.
+- NBAPI v1 deprecated in NetBox 5.6 (Nov 2022), retired in 6.0. For existing v1 users, upgrading to **6.2** disables v1 and enables v2.
+- **v2 is the same protocol.** Same XML envelope, same `Login` session auth, same `CODE`/`ERRMSG`/`APIERROR` responses. v2 adds 24 commands (alarms, portal states, locations, virtual credentials, Mercury/SIO hardware) and changes 9 of the 81 v1 commands; elevators and floors still have no add/modify/delete. None of the collector's read-only commands are known to have changed, but this is unverified until we have the v2 guide. Source: a community client verified live against a NetBox 6.2.0 controller (J-MaFf/s2-netbox-mcp, PR #101, Sept 2026).
+- **What actually changes on 6.x is the URL.** Commands move to `/nbws/goforms/nbapi`; the legacy `/goforms/nbapi` answers HTTP 410 on every request. The Event API path on 6.x is not publicly documented; we assume `/nbws/appd/nbapi` and `/nbws/appdevent/nbapi/event` and verify on upgrade day.
+- The Data Integration tab on newer firmware has an explicit **Enable V2** checkbox beside Use Authentication and Use login username/password. On 5.6–5.x this may allow v1 and v2 at the same time, which would let the collector run on v2 now while braXos stays on v1. Ask Sequoyah for the current version and whether the checkbox is present.
+- The v2 guide is LenelS2 document **#API2-UG-8 (April 2025)**, published on the NetBox controller's own help portal: Getting Started → Guides and Technical Notes → Programming Guides. Sequoyah can pull it, or we can once we have web access to the unit. The v1 guide we hold is #API-UG-22 (April 2024).
+- `GetAPIVersion` (p. 95) returns the API software version. The collector's `NbapiClient.probe()` tries the legacy paths then `/nbws`, logs in, reads `GetAPIVersion`, and records which family answered; it runs on every start so the switch is visible without configuration changes. Set `pathFamily` explicitly only to skip the probe.
 
 ## Transport
 
-- XML over HTTP POST. Commands: `http://<netbox>/goforms/nbapi`. Event list/trigger: `http://<netbox>/appd/nbapi`. Event stream: `http://<netbox>/appdevent/nbapi/event`. (Confirm HTTP vs HTTPS and certificate on Spire's unit.)
+- XML over HTTP POST. Pre-6.x: commands `http://<netbox>/goforms/nbapi`, event list/trigger `http://<netbox>/appd/nbapi`, event stream `http://<netbox>/appdevent/nbapi/event`. 6.x: the same under `/nbws/…` (commands verified; event paths assumed). Confirm HTTP vs HTTPS and certificate on Spire's unit.
 - Envelope: `<NETBOX-API sessionid="…"><COMMAND name="X" num="1" dateformat="tzoffset"><PARAMS>…</PARAMS></COMMAND></NETBOX-API>`. `num` is always 1 (one command per message).
 - Response: `<NETBOX sessionid="…"><RESPONSE command="X" num="1"><CODE>SUCCESS|FAIL|NOT FOUND</CODE><DETAILS>…</DETAILS></RESPONSE></NETBOX>`. API-level failures come back as `<RESPONSE><APIERROR>n</APIERROR></RESPONSE>` (table on p. 9; `5` = authentication failure / API not enabled).
 - Max response block 176 KB. Dates are site-local unless `dateformat="tzoffset"` is set, which returns `YYYY-MM-DD HH:MM:SS ±HHMM`.

@@ -38,6 +38,8 @@ What the client guarantees:
 - **Timestamps.** Every command is sent with `dateformat="tzoffset"` so NetBox returns `YYYY-MM-DD HH:MM:SS ±HHMM`; `@spire/shared`'s `netboxTimeToIso` turns that into UTC.
 - **Stream.** `EventStream.events()` is an async iterator that holds one connection, treats 30 s of silence as a dead link (NetBox sends a keep-alive every 10 s), reconnects with 1 s → 60 s backoff, and reports `connecting | connected | stream-down | stopped` through `onStatus`. It never replays the past: use `getAccessHistory({ afterLogId })` for catch-up.
 
+- **Both versions.** v1 and v2 share the protocol; 6.x firmware moves the endpoints under `/nbws/` and answers 410 on the old paths. With `version: 'auto'` (default in the collector) `probe()` runs at startup, finds the working path family, reads `GetAPIVersion`, and reports both. Nothing to reconfigure on upgrade day.
+
 Configuration knobs that may need adjusting once Sequoyah confirms Spire's unit: `bodyMode` (`raw`, the guide's wording, or `form` for an `APIcommand=` field), `sessionCookie`, `paths`, and a custom `undici` `Dispatcher` for a self-signed certificate.
 
 ## Developing

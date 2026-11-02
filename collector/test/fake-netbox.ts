@@ -36,6 +36,8 @@ export interface FakeNetBoxOptions {
   keepAliveMs?: number;
   /** Page size for GetReaders. */
   readerPageSize?: number;
+  /** Serve NBAPI under /nbws/… like NetBox 6.x and answer 410 on the legacy paths. */
+  nbws?: boolean;
 }
 
 export class FakeNetBox {
@@ -76,6 +78,7 @@ export class FakeNetBox {
       apiDisabled: opts.apiDisabled ?? false,
       keepAliveMs: opts.keepAliveMs ?? 10_000,
       readerPageSize: opts.readerPageSize ?? 100,
+      nbws: opts.nbws ?? false,
     };
     this.server = createServer((req, res) => void this.handle(req, res));
   }
@@ -115,7 +118,19 @@ export class FakeNetBox {
     for await (const c of req) chunks.push(c as Buffer);
     let body = Buffer.concat(chunks).toString('utf8');
     if (body.startsWith('APIcommand=')) body = decodeURIComponent(body.slice('APIcommand='.length));
-    const path = req.url ?? '/';
+    let path = req.url ?? '/';
+    if (this.options.nbws) {
+      if (!path.startsWith('/nbws/')) {
+        this.requests.push({ path, command: undefined, body });
+        res.writeHead(410, { 'content-type': 'text/plain' });
+        return res.end('Gone');
+      }
+      path = path.slice('/nbws'.length);
+    } else if (path.startsWith('/nbws/')) {
+      this.requests.push({ path, command: undefined, body });
+      res.writeHead(404, { 'content-type': 'text/plain' });
+      return res.end('Not Found');
+    }
     let command: string | undefined;
     let sessionId: string | undefined;
     let params: Record<string, unknown> = {};

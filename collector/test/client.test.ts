@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { NbapiClient } from '../src/nbapi/client.js';
+import { NbapiClient, NbapiWrongPathError } from '../src/nbapi/client.js';
 import {
   getAccessHistory,
   getApiVersion,
@@ -202,5 +202,64 @@ describe('form body mode', () => {
     });
     expect(await pingApp(c)).toBe(true);
     expect(fake.requests[0]?.body).toContain('<COMMAND name="Login"');
+  });
+});
+
+describe('path families and probe', () => {
+  it('auto-probe picks legacy on a pre-6.x unit', async () => {
+    const c = await boot({ apiVersion: '4.7' });
+    const r = await c.probe();
+    expect(r.pathFamily).toBe('legacy');
+    expect(r.apiVersion).toBe('4.7');
+    expect(r.tried).toHaveLength(1);
+    expect(c.paths.commands).toBe('/goforms/nbapi');
+    expect(c.isLoggedIn).toBe(true);
+  });
+
+  it('auto-probe falls through to nbws on a 6.x unit that answers 410 on legacy paths', async () => {
+    const c = await boot({ nbws: true, apiVersion: '6.2' });
+    const r = await c.probe();
+    expect(r.pathFamily).toBe('nbws');
+    expect(r.apiVersion).toBe('6.2');
+    expect(r.tried.map((t) => t.family)).toEqual(['legacy', 'nbws']);
+    expect(r.tried[0]?.outcome).toMatch(/410/);
+    expect(c.paths.commands).toBe('/nbws/goforms/nbapi');
+    expect(c.paths.stream).toBe('/nbws/appdevent/nbapi/event');
+    expect(await pingApp(c)).toBe(true);
+  });
+
+  it('a configured family is tried first, then the other', async () => {
+    fake = new FakeNetBox({ nbws: false });
+    baseUrl = await fake.start();
+    const c = new NbapiClient({
+      baseUrl,
+      username: 'api',
+      password: 'secret',
+      version: 'auto',
+      pathFamily: 'nbws',
+    });
+    const r = await c.probe();
+    expect(r.tried.map((t) => t.family)).toEqual(['nbws', 'legacy']);
+    expect(r.pathFamily).toBe('legacy');
+  });
+
+  it('a fixed family without probe surfaces 410 as NbapiWrongPathError', async () => {
+    fake = new FakeNetBox({ nbws: true });
+    baseUrl = await fake.start();
+    const c = new NbapiClient({
+      baseUrl,
+      username: 'api',
+      password: 'secret',
+      version: 2,
+      pathFamily: 'legacy',
+    });
+    await expect(pingApp(c)).rejects.toBeInstanceOf(NbapiWrongPathError);
+  });
+
+  it('probe does not mask bad credentials as a path problem', async () => {
+    fake = new FakeNetBox();
+    baseUrl = await fake.start();
+    const c = new NbapiClient({ baseUrl, username: 'api', password: 'nope', version: 'auto' });
+    await expect(c.probe()).rejects.toBeInstanceOf(NbapiAuthError);
   });
 });

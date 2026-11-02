@@ -12,15 +12,17 @@ import {
   type NbapiClientOptions,
   NbapiDisallowedCommandError,
   NbapiError,
+  type NbapiPathFamily,
+  type NbapiProbeResult,
   type NbapiResponse,
+  PATH_FAMILIES,
 } from './types.js';
 import { buildCommand, type ParamNode, parseResponse } from './xml.js';
 
-const DEFAULT_PATHS = {
-  commands: '/goforms/nbapi',
-  events: '/appd/nbapi',
-  stream: '/appdevent/nbapi/event',
-} as const;
+/** Thrown when NetBox answers HTTP 410 on a path: the other path family is in use. */
+export class NbapiWrongPathError extends NbapiError {
+  override name = 'NbapiWrongPathError';
+}
 
 export interface CallOptions {
   /** Do not attach a session (Login itself). */
@@ -31,8 +33,14 @@ export interface CallOptions {
 
 export class NbapiClient {
   readonly baseUrl: string;
-  readonly paths: { commands: string; events: string; stream: string };
-  readonly version: 1 | 2;
+  paths: { commands: string; events: string; stream: string };
+  /** Configured expectation; 'auto' accepts whatever GetAPIVersion reports. */
+  readonly version: 1 | 2 | 'auto';
+  /** Path family in use; undefined until configured or probed. */
+  pathFamily: NbapiPathFamily | undefined;
+  /** Result of the last probe(), if any. */
+  probeResult: NbapiProbeResult | undefined;
+  private readonly pathOverrides: Partial<{ commands: string; events: string; stream: string }>;
   private readonly username: string;
   private readonly password: string;
   private readonly bodyMode: 'raw' | 'form';
@@ -44,8 +52,12 @@ export class NbapiClient {
 
   constructor(opts: NbapiClientOptions) {
     this.baseUrl = opts.baseUrl.replace(/\/+$/, '');
-    this.paths = { ...DEFAULT_PATHS, ...(opts.paths ?? {}) };
     this.version = opts.version;
+    this.pathOverrides = opts.paths ?? {};
+    const family = opts.pathFamily ?? 'auto';
+    // Until probed, 'auto' starts on legacy (the guide's paths); probe() corrects it.
+    this.pathFamily = family === 'auto' ? undefined : family;
+    this.paths = { ...PATH_FAMILIES[this.pathFamily ?? 'legacy'], ...this.pathOverrides };
     this.username = opts.username;
     this.password = opts.password;
     this.bodyMode = opts.bodyMode ?? 'raw';
@@ -63,6 +75,48 @@ export class NbapiClient {
 
   get isLoggedIn(): boolean {
     return this.sessionId !== undefined;
+  }
+
+  /** Switch path family (keeps explicit per-path overrides). Drops the session. */
+  usePathFamily(family: NbapiPathFamily): void {
+    this.pathFamily = family;
+    this.paths = { ...PATH_FAMILIES[family], ...this.pathOverrides };
+    this.sessionId = undefined;
+  }
+
+  /**
+   * Find out which path family this NetBox serves and which API version it
+   * reports. Tries the configured family first (or legacy, then nbws when
+   * 'auto'), treating HTTP 410 and 404 as "not this family". Leaves the client
+   * logged in on the working family.
+   */
+  async probe(): Promise<NbapiProbeResult> {
+    const order: NbapiPathFamily[] = this.pathFamily
+      ? [this.pathFamily, this.pathFamily === 'legacy' ? 'nbws' : 'legacy']
+      : ['legacy', 'nbws'];
+    const tried: NbapiProbeResult['tried'] = [];
+    for (const family of order) {
+      this.usePathFamily(family);
+      try {
+        await this.login();
+        const res = await this.send('GetAPIVersion', undefined, { noRetry: true });
+        const apiVersion = String(res.details?.APIVERSION ?? '');
+        tried.push({ family, outcome: `ok (APIVERSION ${apiVersion || 'unknown'})` });
+        this.probeResult = { pathFamily: family, apiVersion, tried };
+        return this.probeResult;
+      } catch (err) {
+        const e = err as Error;
+        tried.push({ family, outcome: e.message });
+        // Auth and API-disabled errors are definitive: the path is right, the setup is not.
+        if (err instanceof NbapiAuthError) throw err;
+        if (err instanceof NbapiError && /APIERROR [12]\b/.test(e.message)) throw err;
+        this.sessionId = undefined;
+      }
+    }
+    throw new NbapiError(
+      `No NBAPI path family answered: ${tried.map((t) => `${t.family}: ${t.outcome}`).join('; ')}`,
+      'probe',
+    );
   }
 
   /** Log in (idempotent; concurrent callers share one login). */
@@ -183,6 +237,12 @@ export class NbapiClient {
       bodyTimeout: this.timeoutMs,
     });
     const text = await res.body.text();
+    if (res.statusCode === 410 || res.statusCode === 404) {
+      throw new NbapiWrongPathError(
+        `HTTP ${res.statusCode} from ${path}: this NetBox does not serve NBAPI there (6.x uses /nbws/…)`,
+        path,
+      );
+    }
     if (res.statusCode >= 400) {
       throw new NbapiError(`HTTP ${res.statusCode} from ${path}`, path);
     }

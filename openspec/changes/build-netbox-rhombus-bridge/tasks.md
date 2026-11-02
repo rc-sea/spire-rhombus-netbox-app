@@ -15,7 +15,9 @@
 - [x] 2.2 Implement `GetReaders`, `GetPortals`, `GetElevators`, `GetFloors`, `ListEvents` with pagination via `STARTFROMKEY`/`NEXTKEY`; verify fixture-based tests parse the April 2024 guide's example responses
 - [x] 2.3 Implement `GetAccessHistory` with `AFTERLOGID`/`MAXRECORDS` and `NOT FOUND` handling; verify tests cover ascending catch-up and the -1 `NEXTLOGID` terminator
 - [x] 2.4 Implement `StreamEvents` as an async iterator over the chunked HTTP response with TAGNAMES, keep-alive detection (30 s), single-connection guard and backoff; verify tests using a fake server that emits events, keep-alives and mid-stream disconnects
-- [ ] 2.5 Record real responses from Spire's NetBox (secrets redacted) as v1 fixtures and verify the contract test suite passes against them; verify the suite can be re-run with `NBAPI_VERSION=2` fixtures later
+- [ ] 2.5 Record real responses from Spire's NetBox (secrets redacted) as fixtures for the current version and path family, verify the contract test suite passes against them, and verify `probe()` reports the expected family and `GetAPIVersion`; repeat after the NetBox update for v2/`/nbws` (and confirm the 6.x event-stream path)
+- [ ] 2.5a [vendor] Obtain the NBAPI v2 guide (#API2-UG-8, April 2025) from the NetBox help portal via Sequoyah; diff the read-only commands we use against the v1 guide and record findings in docs/netbox-nbapi.md
+- [ ] 2.5b [vendor] Ask Sequoyah whether Spire's firmware exposes "Enable V2" alongside v1 today; if so, run the collector on v2 now and record the outcome in docs/environment.md
 - [x] 2.6 Document the client and the allow-list in `collector/README.md` and verify the documented example runs against the fake server
 
 ## 3. Collector service
