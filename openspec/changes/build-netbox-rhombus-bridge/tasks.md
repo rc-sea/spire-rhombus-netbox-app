@@ -2,21 +2,21 @@
 
 ## 1. Repository and shared foundations
 
-- [ ] 1.1 Scaffold a pnpm monorepo with `collector/`, `cloud/`, `packages/shared/`; verify `pnpm -r build` and `pnpm -r test` run green on an empty test
-- [ ] 1.2 Define the bridge event schema in `packages/shared` with zod (`BridgeEvent`, `Heartbeat`, `InventorySnapshot`, `IngestResponse`) and verify unit tests cover every `kind` and reject unknown fields
-- [ ] 1.3 Add GitHub Actions CI (lint, typecheck, test, Docker build for collector) and verify a PR shows all checks passing
-- [ ] 1.4 Write `docs/architecture.md` (two deployables, data flow, trust boundaries) and verify it links to design.md and the API summaries in `docs/`
+- [x] 1.1 Scaffold a pnpm monorepo with `collector/`, `cloud/`, `packages/shared/`; verify `pnpm -r build` and `pnpm -r test` run green on an empty test
+- [x] 1.2 Define the bridge event schema in `packages/shared` with zod (`BridgeEvent`, `Heartbeat`, `InventorySnapshot`, `IngestResponse`) and verify unit tests cover every `kind` and reject unknown fields
+- [x] 1.3 Add GitHub Actions CI (lint, typecheck, test, Docker build for collector) and verify a PR shows all checks passing
+- [x] 1.4 Write `docs/architecture.md` (two deployables, data flow, trust boundaries) and verify it links to design.md and the API summaries in `docs/`
 - [ ] 1.5 [vendor] Obtain from Sequoyah: NetBox IP, HTTP/HTTPS, NBAPI enabled on the Data Integration tab, read-only API user credentials, current NetBox version; record in `docs/environment.md` (no secrets) and verify `PingApp` succeeds from the LAN host
 - [ ] 1.6 [vendor] Obtain from the Rhombus dealer: confirmation of API access, an API key role with camera read / seekpoint create / media URI / federated token permissions, and the camera list; verify `getMinimalCameraStateList` returns Spire's cameras
 
 ## 2. NBAPI client (collector)
 
-- [ ] 2.1 Implement the NBAPI XML client (`Login`, `Logout`, `PingApp`, `GetAPIVersion`, request/response envelope, `APIERROR` and `CODE` handling, `dateformat=tzoffset`) with a read-only command allow-list; verify unit tests show a disallowed command is refused without a request
-- [ ] 2.2 Implement `GetReaders`, `GetPortals`, `GetElevators`, `GetFloors`, `ListEvents` with pagination via `STARTFROMKEY`/`NEXTKEY`; verify fixture-based tests parse the April 2024 guide's example responses
-- [ ] 2.3 Implement `GetAccessHistory` with `AFTERLOGID`/`MAXRECORDS` and `NOT FOUND` handling; verify tests cover ascending catch-up and the -1 `NEXTLOGID` terminator
-- [ ] 2.4 Implement `StreamEvents` as an async iterator over the chunked HTTP response with TAGNAMES, keep-alive detection (30 s), single-connection guard and backoff; verify tests using a fake server that emits events, keep-alives and mid-stream disconnects
+- [x] 2.1 Implement the NBAPI XML client (`Login`, `Logout`, `PingApp`, `GetAPIVersion`, request/response envelope, `APIERROR` and `CODE` handling, `dateformat=tzoffset`) with a read-only command allow-list; verify unit tests show a disallowed command is refused without a request
+- [x] 2.2 Implement `GetReaders`, `GetPortals`, `GetElevators`, `GetFloors`, `ListEvents` with pagination via `STARTFROMKEY`/`NEXTKEY`; verify fixture-based tests parse the April 2024 guide's example responses
+- [x] 2.3 Implement `GetAccessHistory` with `AFTERLOGID`/`MAXRECORDS` and `NOT FOUND` handling; verify tests cover ascending catch-up and the -1 `NEXTLOGID` terminator
+- [x] 2.4 Implement `StreamEvents` as an async iterator over the chunked HTTP response with TAGNAMES, keep-alive detection (30 s), single-connection guard and backoff; verify tests using a fake server that emits events, keep-alives and mid-stream disconnects
 - [ ] 2.5 Record real responses from Spire's NetBox (secrets redacted) as v1 fixtures and verify the contract test suite passes against them; verify the suite can be re-run with `NBAPI_VERSION=2` fixtures later
-- [ ] 2.6 Document the client and the allow-list in `collector/README.md` and verify the documented example runs against the fake server
+- [x] 2.6 Document the client and the allow-list in `collector/README.md` and verify the documented example runs against the fake server
 
 ## 3. Collector service
 
