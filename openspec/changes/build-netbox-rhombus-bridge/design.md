@@ -33,7 +33,7 @@ See proposal.md for motivation. The facts that shape the design:
 
 ### 2. Collector language and shape
 
-**Choice:** Node 22 + TypeScript, single process, `undici` for HTTP, `fast-xml-parser` for NBAPI XML, SQLite (`better-sqlite3`) for the local spool and `lastLogId`, Pino logs. Shipped as a multi-arch Docker image (amd64/arm64) with `restart: unless-stopped`.
+**Choice:** Node 26 (LTS since October 2026, supported into 2029; Vercel's current default) + TypeScript, single process, `undici` for HTTP, `fast-xml-parser` for NBAPI XML, SQLite (Node's built-in `node:sqlite`) for the local spool and `lastLogId`, Pino logs. Shipped as a multi-arch Docker image (amd64/arm64) on `node:26-slim` with `restart: unless-stopped`. The same major is pinned in every package's `engines` so collector and cloud never drift apart. Node 22 was considered and rejected: it entered maintenance in October 2026 and ends in April 2027.
 **Why:** Same language as the cloud side so the shared event schema (`packages/shared`, zod) is literally shared; SQLite gives durable at-least-once without another service; Node handles one long-lived stream and periodic polling trivially.
 **Alternatives:** Go (great for a daemon, but splits the codebase); Python (Rhombus examples exist, but no shared types). The NBAPI client is its own module with a **command allow-list** so the read-only guarantee is enforced in code, not by convention.
 
@@ -99,6 +99,7 @@ Pino JSON logs in both deployables; Vercel log drain optional. Health states com
 - [Vercel function limits during a large catch-up (thousands of events)] → Cron drains in bounded pages (≤500 jobs per run); the collector throttles history delivery to 100 events per batch, 1 batch/second.
 - [Rhombus seekpoint limits or rate limits are undocumented] → Batch per camera, honour 429 with backoff, and ask the Rhombus dealer for limits; make the per-kind publish toggle available so noisy kinds (e.g. "Event normal") can be excluded.
 - [`@rhombussystems/react` has a gap for kiosk use (e.g. no hook for a per-tile offline placeholder or a breaking release)] → Pin the SDK version; wrap `RhombusPlayer` in our own tile component that owns the placeholder, check-in and reload logic; fallback is `dash.js` per Rhombus's `player-example` (federated token → `getMediaUris` → DASH), documented in docs/rhombus-api.md.
+- [Node 26 `fetch` behaviour change (HTTP/1.1 opt-out noted by Vercel)] → The collector uses `undici` explicitly for the NBAPI stream; the cloud side calls Rhombus over HTTPS with standard `fetch`; cover both with the recorded-response tests on Node 26 in CI.
 - [Team is Nuxt-first] → Next.js is close enough for an app this size; keep the admin UI to a small set of pages, and lean on Supabase for auth and data access patterns the team already knows.
 - [Display PCs are old Magic Monitor machines] → Verify Chrome/Edge version and H.264/WebCodecs support in task 1; fallback static panel is specified.
 - [Rhombus ships native NetBox integration mid-project] → Collector/publisher become redundant; displays, admin and health keep value. Keep the publisher behind a feature flag so it can be turned off without redeploying.

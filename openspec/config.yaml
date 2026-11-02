@@ -13,6 +13,7 @@ context: |
     credential, access-level or portal data to NetBox.
   - Rhombus API keys and NetBox credentials never reach a browser. Browsers get
     short-lived federated session tokens minted by the cloud service.
+  - Runtime: Node 26 everywhere, pinned in `engines` and the Docker base image.
   - Two deployables: `collector` (Docker container on the LAN, Node/TypeScript) and
     `cloud` (Next.js App Router on Vercel, TypeScript, Supabase Auth + Postgres).
     Display tiles use the official @rhombussystems/react SDK, version pinned.

@@ -29,7 +29,7 @@ openspec/
       parking-lobby-display/spec.md
 ```
 
-Useful commands (Node 22+):
+Useful commands (Node 26):
 
 ```bash
 npx @fission-ai/openspec@latest validate build-netbox-rhombus-bridge --strict

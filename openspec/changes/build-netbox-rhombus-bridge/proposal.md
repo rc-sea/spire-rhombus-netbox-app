@@ -39,7 +39,7 @@ Out of scope for v1 (explicitly):
 
 ## Impact
 
-- **New repository code**: `collector/` (Node 22 + TypeScript, Docker image), `cloud/` (Next.js on Vercel with Supabase Auth and Postgres — see design.md Decision 3), `packages/shared/` (event schema, zod validators).
+- **New repository code**: `collector/` (Node 26 + TypeScript, Docker image), `cloud/` (Next.js on Vercel with Supabase Auth and Postgres — see design.md Decision 3), `packages/shared/` (event schema, zod validators).
 - **External systems touched**: NetBox (read-only NBAPI user with API privileges; Data Integration enabled by Sequoyah), Rhombus (API key with a least-privilege role; federated session tokens for displays), email/Slack for alerts.
 - **Building network**: one LAN host (small PC or NUC, or a VM on the braXos replacement server only if braXos agrees in writing) running Docker, with outbound HTTPS to Vercel and Rhombus only. No inbound rules.
 - **Vendors**: Sequoyah must enable NBAPI and create the API user; Rhombus dealer must confirm API access on Spire's plan and camera UUIDs; ButterflyMX is untouched (its releases appear as NetBox portal events).
