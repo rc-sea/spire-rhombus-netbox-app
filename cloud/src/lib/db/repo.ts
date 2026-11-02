@@ -7,7 +7,15 @@ import type { BridgeEvent, Heartbeat, InventoryItem } from '@spire/shared';
 
 export type EventStatus = 'pending' | 'published' | 'partial' | 'failed' | 'unmapped' | 'ignored';
 export type JobStatus = 'pending' | 'published' | 'failed';
-export type SeekpointColor = 'BLUE' | 'RED' | 'PURPLE' | 'TAN' | 'ORANGE' | 'TEAL' | 'GRAY' | 'BLACK';
+export type SeekpointColor =
+  | 'BLUE'
+  | 'RED'
+  | 'PURPLE'
+  | 'TAN'
+  | 'ORANGE'
+  | 'TEAL'
+  | 'GRAY'
+  | 'BLACK';
 
 export interface CollectorRow {
   id: string;
@@ -111,5 +119,12 @@ export interface Repo {
   replaceInventory(items: InventoryItem[], seenAt: string): Promise<void>;
 
   // audit
-  audit(entry: { actor: string; action: string; objectType: string; objectId?: string; before?: unknown; after?: unknown }): Promise<void>;
+  audit(entry: {
+    actor: string;
+    action: string;
+    objectType: string;
+    objectId?: string;
+    before?: unknown;
+    after?: unknown;
+  }): Promise<void>;
 }

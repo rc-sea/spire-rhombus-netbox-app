@@ -12,7 +12,7 @@ create table public.profiles (
   created_at  timestamptz not null default now()
 );
 
-create or replace function public.current_role()
+create or replace function public.bridge_role()
 returns text language sql stable security definer set search_path = public as $$
   select role from public.profiles where user_id = auth.uid()
 $$;
@@ -162,24 +162,24 @@ alter table public.health_states    enable row level security;
 alter table public.audit_log        enable row level security;
 
 create policy "profiles: self read"      on public.profiles for select using (user_id = auth.uid());
-create policy "profiles: admin all"      on public.profiles for all using (public.current_role() = 'admin');
+create policy "profiles: admin all"      on public.profiles for all using (public.bridge_role() = 'admin');
 
-create policy "viewers read"  on public.events           for select using (public.current_role() in ('viewer', 'admin'));
-create policy "viewers read"  on public.publish_jobs     for select using (public.current_role() in ('viewer', 'admin'));
-create policy "viewers read"  on public.netbox_inventory for select using (public.current_role() in ('viewer', 'admin'));
-create policy "viewers read"  on public.rhombus_cameras  for select using (public.current_role() in ('viewer', 'admin'));
-create policy "viewers read"  on public.mappings         for select using (public.current_role() in ('viewer', 'admin'));
-create policy "viewers read"  on public.settings         for select using (public.current_role() in ('viewer', 'admin'));
-create policy "viewers read"  on public.displays         for select using (public.current_role() in ('viewer', 'admin'));
-create policy "viewers read"  on public.health_states    for select using (public.current_role() in ('viewer', 'admin'));
-create policy "viewers read"  on public.audit_log        for select using (public.current_role() in ('viewer', 'admin'));
+create policy "viewers read"  on public.events           for select using (public.bridge_role() in ('viewer', 'admin'));
+create policy "viewers read"  on public.publish_jobs     for select using (public.bridge_role() in ('viewer', 'admin'));
+create policy "viewers read"  on public.netbox_inventory for select using (public.bridge_role() in ('viewer', 'admin'));
+create policy "viewers read"  on public.rhombus_cameras  for select using (public.bridge_role() in ('viewer', 'admin'));
+create policy "viewers read"  on public.mappings         for select using (public.bridge_role() in ('viewer', 'admin'));
+create policy "viewers read"  on public.settings         for select using (public.bridge_role() in ('viewer', 'admin'));
+create policy "viewers read"  on public.displays         for select using (public.bridge_role() in ('viewer', 'admin'));
+create policy "viewers read"  on public.health_states    for select using (public.bridge_role() in ('viewer', 'admin'));
+create policy "viewers read"  on public.audit_log        for select using (public.bridge_role() in ('viewer', 'admin'));
 -- Collectors: viewers see names and last heartbeat but never the hash (column grants below).
-create policy "viewers read"  on public.collectors       for select using (public.current_role() in ('viewer', 'admin'));
+create policy "viewers read"  on public.collectors       for select using (public.bridge_role() in ('viewer', 'admin'));
 
-create policy "admins write"  on public.mappings  for all using (public.current_role() = 'admin') with check (public.current_role() = 'admin');
-create policy "admins write"  on public.settings  for all using (public.current_role() = 'admin') with check (public.current_role() = 'admin');
-create policy "admins write"  on public.displays  for all using (public.current_role() = 'admin') with check (public.current_role() = 'admin');
-create policy "admins write"  on public.collectors for all using (public.current_role() = 'admin') with check (public.current_role() = 'admin');
+create policy "admins write"  on public.mappings  for all using (public.bridge_role() = 'admin') with check (public.bridge_role() = 'admin');
+create policy "admins write"  on public.settings  for all using (public.bridge_role() = 'admin') with check (public.bridge_role() = 'admin');
+create policy "admins write"  on public.displays  for all using (public.bridge_role() = 'admin') with check (public.bridge_role() = 'admin');
+create policy "admins write"  on public.collectors for all using (public.bridge_role() = 'admin') with check (public.bridge_role() = 'admin');
 
 revoke all on public.collectors from authenticated;
 grant select (id, name, created_at, last_seen_at, last_heartbeat) on public.collectors to authenticated;

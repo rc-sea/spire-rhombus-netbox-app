@@ -93,8 +93,14 @@ export class MemoryRepo implements Repo {
       .filter((e) => !q.from || e.occurredAt >= q.from)
       .filter((e) => !q.to || e.occurredAt <= q.to)
       .filter((e) => !q.kind || e.kind === q.kind)
-      .filter((e) => !q.reader || (e.netbox.readerName ?? '').toLowerCase().includes(q.reader.toLowerCase()))
-      .filter((e) => !q.person || (e.netbox.personName ?? '').toLowerCase().includes(q.person.toLowerCase()))
+      .filter(
+        (e) =>
+          !q.reader || (e.netbox.readerName ?? '').toLowerCase().includes(q.reader.toLowerCase()),
+      )
+      .filter(
+        (e) =>
+          !q.person || (e.netbox.personName ?? '').toLowerCase().includes(q.person.toLowerCase()),
+      )
       .filter((e) => !q.status || e.status === q.status)
       .sort((a, b) => (a.occurredAt < b.occurredAt ? 1 : -1))
       .slice(0, q.limit ?? 100);

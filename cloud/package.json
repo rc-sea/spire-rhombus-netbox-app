@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "description": "Cloud bridge service: ingest from the collector, map NetBox sources to Rhombus cameras, publish seekpoints, admin UI, health, displays.",
-  "engines": { "node": "26.x" },
+  "engines": {
+    "node": "26.x"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",

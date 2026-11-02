@@ -25,6 +25,9 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+      - run: pnpm --filter @spire/cloud build
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
 
   collector-image:
     name: Build collector image

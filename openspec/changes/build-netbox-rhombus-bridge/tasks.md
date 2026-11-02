@@ -32,14 +32,14 @@
 
 ## 4. Cloud service: ingest and publishing
 
-- [ ] 4.1 Create the Next.js (App Router) project on Vercel with Supabase (Auth + Postgres), migrations for the tables in design.md Decision 6, and RLS policies; verify migrations apply cleanly to a fresh project and RLS blocks anonymous reads
-- [ ] 4.2 Implement `/api/ingest/events` (bearer auth against hashed collector secret, zod validation, idempotent insert, per-event errors) and verify tests cover new, duplicate, invalid-auth and partially invalid batches
-- [ ] 4.3 Implement `/api/ingest/heartbeat` and `/api/ingest/inventory` and verify tests store heartbeats and upsert inventory by (type, netbox_key)
-- [ ] 4.4 Implement the Rhombus client (`createCustomFootageSeekpoints`, `getMinimalCameraStateList`, `generateFederatedSessionToken`, `getMediaUris`) with error-code handling and 429 backoff; verify tests use recorded responses and assert the API key never appears in logs
-- [ ] 4.5 Implement mapping resolution (reader → portal → elevator → event name → default) and the `publish_jobs` state machine with per-camera batching; verify tests cover two-camera fan-out, unmapped, disabled mapping and catch-all
-- [ ] 4.6 Implement the publisher (immediate attempt after ingest + per-minute Vercel Cron drain, ≤500 jobs/run, backoff on job) and verify an integration test publishes a seekpoint at the event's `occurredAt` and marks the job published
-- [ ] 4.7 Implement the event log query API and verify tests filter by time, kind, reader and status and return camera UUIDs and timestamps
-- [ ] 4.8 Document the ingest and query APIs in `cloud/docs/api.md` and verify examples run with `curl` against a preview deployment
+- [x] 4.1 Create the Next.js (App Router) project on Vercel with Supabase (Auth + Postgres), migrations for the tables in design.md Decision 6, and RLS policies; verify migrations apply cleanly to a fresh project and RLS blocks anonymous reads
+- [x] 4.2 Implement `/api/ingest/events` (bearer auth against hashed collector secret, zod validation, idempotent insert, per-event errors) and verify tests cover new, duplicate, invalid-auth and partially invalid batches
+- [x] 4.3 Implement `/api/ingest/heartbeat` and `/api/ingest/inventory` and verify tests store heartbeats and upsert inventory by (type, netbox_key)
+- [x] 4.4 Implement the Rhombus client (`createCustomFootageSeekpoints`, `getMinimalCameraStateList`, `generateFederatedSessionToken`, `getMediaUris`) with error-code handling and 429 backoff; verify tests use recorded responses and assert the API key never appears in logs
+- [x] 4.5 Implement mapping resolution (reader → portal → elevator → event name → default) and the `publish_jobs` state machine with per-camera batching; verify tests cover two-camera fan-out, unmapped, disabled mapping and catch-all
+- [x] 4.6 Implement the publisher (immediate attempt after ingest + per-minute Vercel Cron drain, ≤500 jobs/run, backoff on job) and verify an integration test publishes a seekpoint at the event's `occurredAt` and marks the job published
+- [x] 4.7 Implement the event log query API and verify tests filter by time, kind, reader and status and return camera UUIDs and timestamps
+- [x] 4.8 Document the ingest and query APIs in `cloud/docs/api.md` and verify examples run with `curl` against a preview deployment
 
 ## 5. Admin UI: mapping, settings, audit
 
